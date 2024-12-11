@@ -19,17 +19,18 @@ def execute_command(command, args):
     try:
         if command == ":go":
             if len(args) == 0:
-                console.print("[bold red]Error: Missing folder path[/bold red]")
+                console.print("[bold red]Error: Missing folder path[/bold red]", file=sys.stderr)
                 return
             folder_path = os.path.expanduser(args[0])  # Handle ~ in paths
-            console.print(f"[dim]Debug: Checking path: {folder_path}[/dim]")
+            console.print(f"[dim]Debug: Checking path: {folder_path}[/dim]", file=sys.stderr)
             if os.path.isdir(folder_path):
                 abs_path = os.path.abspath(folder_path)
-                console.print(f"[dim]Debug: Using absolute path: {abs_path}[/dim]")
-                print(f"CHANGE_DIR:{abs_path}")
+                console.print(f"[dim]Debug: Using absolute path: {abs_path}[/dim]", file=sys.stderr)
+                print(f"CHANGE_DIR:{abs_path}", file=sys.stdout)
+                sys.stdout.flush()
                 return
             else:
-                console.print(f"[bold red]Error: The folder '{folder_path}' does not exist.[/bold red]")
+                console.print(f"[bold red]Error: The folder '{folder_path}' does not exist.[/bold red]", file=sys.stderr)
                 return
         elif command == ":fetch":
             console.print("[bold cyan]Fetching updates...[/bold cyan]")
