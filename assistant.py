@@ -22,9 +22,10 @@ def execute_command(command, args):
                 console.print("[bold red]Error: Missing folder path[/bold red]")
                 return
             folder_path = os.path.expanduser(args[0])  # Handle ~ in paths
+            console.print(f"[dim]Debug: Checking path: {folder_path}[/dim]")
             if os.path.isdir(folder_path):
-                # Use absolute path and add a timeout
                 abs_path = os.path.abspath(folder_path)
+                console.print(f"[dim]Debug: Using absolute path: {abs_path}[/dim]")
                 print(f"CHANGE_DIR:{abs_path}")
                 return
             else:

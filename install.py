@@ -150,9 +150,14 @@ fi
 
 # CLI-Chan shell functions
 function go() {
+    echo "Executing go command with args: $@"
     output=$(assistant :go "$@")
+    echo "Received output: $output"
     if [[ $output == CHANGE_DIR:* ]]; then
-        cd "${output#CHANGE_DIR:}"
+        target_dir="${output#CHANGE_DIR:}"
+        echo "Changing directory to: $target_dir"
+        cd "$target_dir" || echo "Failed to change directory"
+        echo "Current directory: $(pwd)"
     else
         echo "$output"
     fi
