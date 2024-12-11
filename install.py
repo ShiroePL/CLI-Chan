@@ -148,7 +148,7 @@ fi
     with open(functions_path, 'w') as f:
         f.write('''#!/bin/bash
 # Simple directory change function
-go() {
+goto() {
     local dir=$(assistant :go "$@")
     if [ $? -eq 0 ] && [ -n "$dir" ]; then
         cd "$dir"
