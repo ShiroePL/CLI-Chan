@@ -155,14 +155,18 @@ goto() {
         return 1
     fi
     
-    # Get absolute path from assistant
+    # Get path from assistant (will later use AI)
     local target=$(assistant :go "$@")
+    local exit_code=$?
     
-    # Check if we got a valid path
-    if [ -d "$target" ]; then
-        cd "$target"
+    if [ $exit_code -eq 0 ] && [ -n "$target" ]; then
+        if [ -d "$target" ]; then
+            cd "$target"
+        else
+            echo "Error: Not a valid directory: $target" >&2
+            return 1
+        fi
     else
-        echo "Invalid directory: $target" >&2
         return 1
     fi
 }
