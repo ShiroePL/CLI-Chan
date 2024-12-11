@@ -11,14 +11,14 @@ def execute_command(command, args):
         if command == ":go":
             if len(args) == 0:
                 print("Error: Missing folder path", file=sys.stderr)
-                return
+                return 1
             folder_path = os.path.expanduser(args[0])
             if os.path.isdir(folder_path):
-                print(os.path.abspath(folder_path))  # Just print the path
-                return
+                print(os.path.abspath(folder_path))  # Just print the absolute path
+                return 0
             else:
                 print(f"Error: Directory does not exist: {folder_path}", file=sys.stderr)
-                return
+                return 1
         elif command == ":fetch":
             subprocess.run(["git", "fetch"])
         elif command == ":checkout":

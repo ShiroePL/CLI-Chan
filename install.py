@@ -147,11 +147,23 @@ fi
     
     with open(functions_path, 'w') as f:
         f.write('''#!/bin/bash
-# Simple directory change function
+
+# CLI-Chan navigation function
 goto() {
-    local dir=$(assistant :go "$@")
-    if [ $? -eq 0 ] && [ -n "$dir" ]; then
-        cd "$dir"
+    if [ $# -eq 0 ]; then
+        echo "Usage: goto <directory>" >&2
+        return 1
+    fi
+    
+    # Get absolute path from assistant
+    local target=$(assistant :go "$@")
+    
+    # Check if we got a valid path
+    if [ -d "$target" ]; then
+        cd "$target"
+    else
+        echo "Invalid directory: $target" >&2
+        return 1
     fi
 }
 ''')
