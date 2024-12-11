@@ -4,7 +4,7 @@
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 # Variables
-REPO_DIR="$SCRIPT_DIR"  # Changed from $HOME/docker/cli-chan to be relative to script location
+REPO_DIR="$SCRIPT_DIR"
 INSTALL_DIR="/usr/local/lib/cli-chan"
 TARGET_BIN="/usr/local/bin/assistant"
 VENV_DIR="$INSTALL_DIR/venv"
@@ -27,9 +27,12 @@ cd "$REPO_DIR" || exit
 echo "Pulling the latest changes from GitHub..."
 git pull || { echo "Error: Failed to pull from GitHub"; exit 1; }
 
-# Step 3: Clean old installation
+# Step 3: Clean old installation and set permissions
 echo "Cleaning old installation..."
-sudo rm -rf "$INSTALL_DIR"  # Keep this from original script - ensures clean install
+sudo rm -rf "$INSTALL_DIR"
+sudo mkdir -p "$INSTALL_DIR"
+sudo chown -R $USER "$INSTALL_DIR"
+sudo chmod -R 755 "$INSTALL_DIR"
 
 # Step 4: Run the install script
 echo "Running install script to update dependencies and copy files..."

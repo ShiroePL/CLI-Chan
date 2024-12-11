@@ -10,21 +10,31 @@ def setup_cli_chan():
     TARGET_BIN = "/usr/local/bin/assistant"
     VENV_DIR = f"{INSTALL_DIR}/venv"
     
-    # Create installation directory (requires sudo)
+    # Create installation directory and set permissions
     print("Creating installation directory...")
     subprocess.run(["sudo", "mkdir", "-p", INSTALL_DIR])
+    subprocess.run(["sudo", "chown", "-R", os.environ["USER"], INSTALL_DIR])
+    subprocess.run(["sudo", "chmod", "-R", "755", INSTALL_DIR])
     
     # Copy project files - modified to handle nested directories
     current_dir = Path(__file__).parent
     print("Copying project files...")
+    
     # First clean the directory except venv
-    subprocess.run(["sudo", "find", INSTALL_DIR, "-not", "-path", f"{VENV_DIR}*", "-delete"])
+    if os.path.exists(VENV_DIR):
+        subprocess.run(["sudo", "find", INSTALL_DIR, "-not", "-path", f"{VENV_DIR}*", "-delete"])
     
     # Copy files individually to avoid nested directory
     for file in current_dir.glob('*'):
         if file.name != 'venv' and file.name != '.git':
             target = Path(INSTALL_DIR) / file.name
-            subprocess.run(["sudo", "cp", "-R", str(file), str(target)])
+            try:
+                subprocess.run(["sudo", "cp", "-R", str(file), str(target)], check=True)
+                subprocess.run(["sudo", "chown", "-R", os.environ["USER"], str(target)])
+                subprocess.run(["sudo", "chmod", "-R", "755", str(target)])
+            except subprocess.CalledProcessError as e:
+                print(f"Error copying {file.name}: {e}")
+                return 1
     
     # Create virtual environment if it doesn't exist
     if not os.path.exists(VENV_DIR):
