@@ -58,51 +58,26 @@ print_status "Starting CLI-Chan Assistant update..."
 
 # Step 1: Navigate to the repository
 if [ ! -d "$REPO_DIR" ]; then
-    echo "Error: Repository not found at $REPO_DIR"
+    print_error "Repository not found at $REPO_DIR"
     exit 1
 fi
 
 cd "$REPO_DIR" || exit
 
-# Step 2: Pull the latest changes from GitHub
-print_step "Pulling the latest changes from GitHub..."
-git pull || { echo "Error: Failed to pull from GitHub"; exit 1; }
-
-# Fix permissions after git pull
-fix_permissions "$REPO_DIR"
-
-# Step 3: Clean old installation and set permissions
-echo "Cleaning old installation..."
+# Step 2: Clean old installation and set permissions
+print_step "Preparing installation directory..."
 sudo rm -rf "$INSTALL_DIR"
 sudo mkdir -p "$INSTALL_DIR"
 fix_permissions "$INSTALL_DIR"
 
-# Step 4: Run the install script
-echo "Running install script to update dependencies and copy files..."
-python3 "$INSTALL_SCRIPT" || { echo "Error: Install script failed"; exit 1; }
+# Step 3: Run the install script
+print_step "Running installation..."
+python3 "$INSTALL_SCRIPT" || { print_error "Install script failed"; exit 1; }
 
 # Final permission check
 fix_permissions "$INSTALL_DIR"
 if [ -d "$VENV_DIR" ]; then
     fix_permissions "$VENV_DIR"
-fi
-
-# Step 5: Double check virtual environment
-if [ ! -d "$VENV_DIR" ]; then
-    echo "Error: Virtual environment not created properly!"
-    exit 1
-fi
-
-# Step 6: Verify the symlink
-if [ ! -f "$TARGET_BIN" ]; then
-    echo "Error: Symlink $TARGET_BIN not found or broken!"
-    exit 1
-fi
-
-# Step 7: Verify executable permissions
-if [ ! -x "$TARGET_BIN" ]; then
-    echo "Fixing executable permissions..."
-    sudo chmod +x "$TARGET_BIN"
 fi
 
 print_success "CLI-Chan Assistant successfully updated!"
