@@ -36,6 +36,17 @@ def setup_cli_chan():
     print("Setting permissions...")
     subprocess.run(["sudo", "chmod", "+x", TARGET_BIN])
     
+    # Update the shebang line in the copied assistant.py
+    print("Updating Python interpreter path...")
+    assistant_path = f"{INSTALL_DIR}/assistant.py"
+    with open(assistant_path, 'r') as f:
+        content = f.read()
+    
+    new_content = f"#!/usr/bin/env {VENV_DIR}/bin/python3\n" + content[content.index('\n')+1:]
+    
+    with open(assistant_path, 'w') as f:
+        f.write(new_content)
+    
     print("CLI-Chan installed successfully!")
 
 if __name__ == "__main__":

@@ -7,7 +7,6 @@ console = Console()
 
 # Add version and path information
 __version__ = "0.1.0"
-VENV_PATH = os.path.join(os.path.expanduser("~"), ".cli-chan", "venv")
 
 def execute_command(command, args):
     if command == ":go":
