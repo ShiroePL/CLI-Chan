@@ -27,7 +27,10 @@ fix_permissions() {
         # Special permissions for venv directory
         sudo find "$dir" -type d -exec chmod 755 {} \; 2>/dev/null
         sudo find "$dir" -type f -exec chmod 644 {} \; 2>/dev/null
+        sudo find "$dir" -type d -exec chmod 755 {} \; 2>/dev/null
+        sudo find "$dir" -type f -exec chmod 644 {} \; 2>/dev/null
         # Make bin files executable
+        sudo find "$dir/bin" -type f -exec chmod 755 {} \; 2>/dev/null
         sudo find "$dir/bin" -type f -exec chmod 755 {} \; 2>/dev/null
     else
         sudo chmod -R 755 "$dir"
@@ -41,6 +44,25 @@ fix_permissions() {
     fi
 }
 
+# Function to print colored messages
+print_status() {
+    echo -e "${CYAN}🚀 $1${NC}"
+}
+
+print_step() {
+    echo -e "${YELLOW}🔄 $1${NC}"
+}
+
+print_success() {
+    echo -e "${GREEN}✨ $1${NC}"
+}
+
+print_error() {
+    echo -e "${RED}❌ $1${NC}"
+}
+
+print_dim() {
+    echo -e "${DIM}$1${NC}"
 # Function to print colored messages
 print_status() {
     echo -e "${CYAN}🚀 $1${NC}"
@@ -86,6 +108,7 @@ print_step "Running installation..."
 python3 "$INSTALL_SCRIPT" || { print_error "Install script failed"; exit 1; }
 
 # Final permission check (moved before installation success message)
+print_step "Finalizing setup..."
 print_step "Finalizing setup..."
 fix_permissions "$INSTALL_DIR"
 if [ -d "$VENV_DIR" ]; then
