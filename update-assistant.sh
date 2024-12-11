@@ -1,42 +1,56 @@
 #!/bin/bash
 
-# Set variables
-REPO_DIR="$HOME/docker/cli-chan"
+# Get the directory where the script is located
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+# Variables
+REPO_DIR="$SCRIPT_DIR"  # Changed from $HOME/docker/cli-chan to be relative to script location
 INSTALL_DIR="/usr/local/lib/cli-chan"
 TARGET_BIN="/usr/local/bin/assistant"
 VENV_DIR="$INSTALL_DIR/venv"
+INSTALL_SCRIPT="$REPO_DIR/install.py"
 
-echo "Updating CLI Assistant..."
+# Redirect output to both console and log file
+exec 1> >(tee -a "$REPO_DIR/update.log") 2>&1
+
+echo "$(date): Starting CLI-Chan Assistant update..."
 
 # Step 1: Navigate to the repository
-cd "$REPO_DIR" || { echo "Error: Repository not found at $REPO_DIR"; exit 1; }
-
-# Step 2: Pull the latest changes from GitHub
-echo "Pulling latest changes from GitHub..."
-git pull || { echo "Error: Failed to pull from GitHub"; exit 1; }
-
-# Step 3: Copy the entire project to the installation directory
-echo "Copying project files to $INSTALL_DIR..."
-sudo rm -rf "$INSTALL_DIR"  # Clean old version
-sudo cp -R "$REPO_DIR" "$INSTALL_DIR" || { echo "Error: Failed to copy project files"; exit 1; }
-
-# Step 4: Set up the virtual environment
-if [ ! -d "$VENV_DIR" ]; then
-    echo "Creating virtual environment..."
-    python3 -m venv "$VENV_DIR" || { echo "Error: Failed to create virtual environment"; exit 1; }
+if [ ! -d "$REPO_DIR" ]; then
+    echo "Error: Repository not found at $REPO_DIR"
+    exit 1
 fi
 
-echo "Activating virtual environment and installing dependencies..."
-source "$VENV_DIR/bin/activate"
-pip install -r "$INSTALL_DIR/requirements.txt" || { echo "Error: Failed to install dependencies"; exit 1; }
-deactivate
+cd "$REPO_DIR" || exit
 
-# Step 5: Symlink the main script to /usr/local/bin
-echo "Creating symlink for assistant.py..."
-sudo ln -sf "$INSTALL_DIR/assistant.py" "$TARGET_BIN" || { echo "Error: Failed to create symlink"; exit 1; }
+# Step 2: Pull the latest changes from GitHub
+echo "Pulling the latest changes from GitHub..."
+git pull || { echo "Error: Failed to pull from GitHub"; exit 1; }
 
-# Step 6: Ensure the main script is executable
-echo "Ensuring $TARGET_BIN is executable..."
-sudo chmod +x "$TARGET_BIN" || { echo "Error: Failed to make $TARGET_BIN executable"; exit 1; }
+# Step 3: Clean old installation
+echo "Cleaning old installation..."
+sudo rm -rf "$INSTALL_DIR"  # Keep this from original script - ensures clean install
 
-echo "CLI Assistant successfully updated!"
+# Step 4: Run the install script
+echo "Running install script to update dependencies and copy files..."
+python3 "$INSTALL_SCRIPT" || { echo "Error: Install script failed"; exit 1; }
+
+# Step 5: Double check virtual environment
+if [ ! -d "$VENV_DIR" ]; then
+    echo "Error: Virtual environment not created properly!"
+    exit 1
+fi
+
+# Step 6: Verify the symlink
+if [ ! -f "$TARGET_BIN" ]; then
+    echo "Error: Symlink $TARGET_BIN not found or broken!"
+    exit 1
+fi
+
+# Step 7: Verify executable permissions
+if [ ! -x "$TARGET_BIN" ]; then
+    echo "Fixing executable permissions..."
+    sudo chmod +x "$TARGET_BIN"
+fi
+
+echo "CLI-Chan Assistant successfully updated!"

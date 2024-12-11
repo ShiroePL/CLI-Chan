@@ -1,0 +1,14 @@
+#!/bin/bash
+
+# Get the repository root directory
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+UPDATE_SCRIPT="$REPO_ROOT/update-assistant.sh"
+
+# Check if update script exists and is executable
+if [ -x "$UPDATE_SCRIPT" ]; then
+    echo "Running post-merge update script..."
+    "$UPDATE_SCRIPT"
+else
+    echo "Error: Update script not found or not executable at $UPDATE_SCRIPT"
+    exit 1
+fi 
