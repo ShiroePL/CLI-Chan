@@ -141,8 +141,31 @@ fi
     subprocess.run(["sudo", "chmod", "+x", TARGET_BIN])
     subprocess.run(["sudo", "chown", os.environ["USER"], TARGET_BIN])
     
+    # Create shell function file
+    console.print("[yellow]📝 Creating shell functions...[/yellow]")
+    functions_path = Path(INSTALL_DIR) / "cli-chan.sh"
+    
+    with open(functions_path, 'w') as f:
+        f.write('''#!/bin/bash
+
+# CLI-Chan shell functions
+function go() {
+    output=$(assistant :go "$@")
+    if [[ $output == CHANGE_DIR:* ]]; then
+        cd "${output#CHANGE_DIR:}"
+    else
+        echo "$output"
+    fi
+}
+''')
+    
+    # Make the functions file executable
+    subprocess.run(["sudo", "chmod", "+x", str(functions_path)])
+    
+    # Add source instruction to README
     console.print("\n[bold green]✨ CLI-Chan installed successfully![/bold green]")
-    console.print("[bold cyan]🎉 You can now use the 'assistant' command![/bold cyan]\n")
+    console.print("[bold cyan]🎉 To enable directory navigation, add this to your ~/.bashrc or ~/.zshrc:[/bold cyan]")
+    console.print(f"[yellow]source {functions_path}[/yellow]\n")
     return 0
 
 if __name__ == "__main__":
