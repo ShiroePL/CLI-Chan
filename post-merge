@@ -1,5 +1,10 @@
 #!/bin/bash
 
+# Skip if flag is set
+if [ -n "$SKIP_POST_MERGE" ]; then
+    exit 0
+fi
+
 # Get the repository root directory
 REPO_ROOT="$(git rev-parse --show-toplevel)"
 UPDATE_SCRIPT="$REPO_ROOT/update-assistant.sh"

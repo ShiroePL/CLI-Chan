@@ -7,6 +7,16 @@ from rich.console import Console
 
 console = Console()
 
+def has_requirements_changed():
+    # Check if requirements.txt was modified in the last git pull
+    result = subprocess.run(
+        ["git", "diff", "--name-only", "HEAD@{1}", "HEAD"],
+        capture_output=True,
+        text=True
+    )
+    changed_files = result.stdout.splitlines()
+    return "requirements.txt" in changed_files
+
 def setup_cli_chan():
     # Set installation paths
     INSTALL_DIR = "/usr/local/lib/cli-chan"
