@@ -18,34 +18,17 @@ RED='\033[0;31m'
 NC='\033[0m' # No Color
 DIM='\033[2m'
 
-# Function to print colored messages
-print_status() {
-    echo -e "${CYAN}$(date): $1${NC}"
-}
-
-print_step() {
-    echo -e "${YELLOW}🔄 $1${NC}"
-}
-
-print_success() {
-    echo -e "${GREEN}✓ $1${NC}"
-}
-
-print_error() {
-    echo -e "${RED}❌ $1${NC}"
-}
-
 # Function to fix permissions
 fix_permissions() {
     local dir=$1
-    console_print "[dim]🔒 Setting permissions for $(basename "$dir")...[/dim]"
+    echo -e "${CYAN}🔒 Setting permissions for $(basename "$dir")...${NC}"
     sudo chown -R $USER:$USER "$dir"
     if [[ "$dir" == *"/venv"* ]]; then
         # Special permissions for venv directory
-        sudo find "$dir" -type d -exec chmod 755 {} \;
-        sudo find "$dir" -type f -exec chmod 644 {} \;
+        sudo find "$dir" -type d -exec chmod 755 {} \; 2>/dev/null
+        sudo find "$dir" -type f -exec chmod 644 {} \; 2>/dev/null
         # Make bin files executable
-        sudo find "$dir/bin" -type f -exec chmod 755 {} \;
+        sudo find "$dir/bin" -type f -exec chmod 755 {} \; 2>/dev/null
     else
         sudo chmod -R 755 "$dir"
         # Make sure update scripts are executable
@@ -58,9 +41,25 @@ fix_permissions() {
     fi
 }
 
-# Add new function for styled printing
-console_print() {
-    echo -e "${DIM}$(date): $1${NC}"
+# Function to print colored messages
+print_status() {
+    echo -e "${CYAN}🚀 $1${NC}"
+}
+
+print_step() {
+    echo -e "${YELLOW}🔄 $1${NC}"
+}
+
+print_success() {
+    echo -e "${GREEN}✨ $1${NC}"
+}
+
+print_error() {
+    echo -e "${RED}❌ $1${NC}"
+}
+
+print_dim() {
+    echo -e "${DIM}$1${NC}"
 }
 
 # Redirect output to both console and log file
@@ -87,7 +86,7 @@ print_step "Running installation..."
 python3 "$INSTALL_SCRIPT" || { print_error "Install script failed"; exit 1; }
 
 # Final permission check (moved before installation success message)
-print_step "Finalizing permissions..."
+print_step "Finalizing setup..."
 fix_permissions "$INSTALL_DIR"
 if [ -d "$VENV_DIR" ]; then
     fix_permissions "$VENV_DIR"
@@ -95,6 +94,6 @@ fi
 
 # Make sure update script stays executable for future updates
 chmod +x "$SCRIPT_DIR/update-cli-chan.sh"
-console_print "[dim]✓ Update scripts are executable[/dim]"
+echo -e "${GREEN}✓ Update scripts are executable${NC}"
 
 print_success "CLI-Chan Assistant successfully updated!"
