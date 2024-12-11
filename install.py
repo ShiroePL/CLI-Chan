@@ -150,14 +150,11 @@ fi
 
 # CLI-Chan shell functions
 function go() {
-    echo "Executing go command with args: $@" >&2
-    # Capture only stdout, redirect stderr to terminal
-    output=$(assistant :go "$@" 2>&1 >/dev/null; assistant :go "$@" 2>/dev/null)
-    echo "Received output: $output" >&2
+    # Get the output from assistant command
+    output=$(assistant :go "$@")
     if [[ $output == CHANGE_DIR:* ]]; then
         target_dir="${output#CHANGE_DIR:}"
-        echo "Changing directory to: $target_dir" >&2
-        cd "$target_dir" && echo "Current directory: $(pwd)" >&2 || echo "Failed to change directory" >&2
+        cd "$target_dir" && pwd || echo "Failed to change directory" >&2
     else
         echo "$output" >&2
     fi
