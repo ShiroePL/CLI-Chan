@@ -1,6 +1,12 @@
-#!/usr/bin/env /usr/local/lib/cli-chan/venv/bin/python3
+#!/usr/bin/env python3
 import os
 import sys
+import site
+
+# Add the virtual environment site-packages to Python path
+VENV_PATH = "/usr/local/lib/cli-chan/venv"
+site.addsitedir(os.path.join(VENV_PATH, "lib", "python3.8", "site-packages"))
+
 from rich.console import Console
 
 console = Console()

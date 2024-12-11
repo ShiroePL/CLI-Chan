@@ -63,9 +63,10 @@ def setup_cli_chan():
     if not os.path.exists(VENV_DIR) or has_requirements_changed():
         print("Requirements changed or venv missing, installing dependencies...")
         if requirements_path.exists():
-            # Use python -m pip to ensure we're using the right pip
-            subprocess.run([f"{VENV_DIR}/bin/python3", "-m", "pip", "install", "--upgrade", "pip"])
-            subprocess.run([f"{VENV_DIR}/bin/python3", "-m", "pip", "install", "-r", str(requirements_path)])
+            # Activate virtual environment and install packages
+            activate_script = f"source {VENV_DIR}/bin/activate && "
+            install_cmd = f"pip install -r {requirements_path}"
+            subprocess.run(activate_script + install_cmd, shell=True, executable="/bin/bash")
         else:
             print(f"Warning: requirements.txt not found at {requirements_path}")
             return 1
@@ -84,20 +85,7 @@ def setup_cli_chan():
     # Make executable
     print("Setting permissions...")
     subprocess.run(["sudo", "chmod", "+x", TARGET_BIN])
-    
-    # Update the shebang line in the copied assistant.py
-    print("Updating Python interpreter path...")
-    try:
-        with open(assistant_path, 'r') as f:
-            content = f.read()
-        
-        new_content = f"#!/usr/bin/env {VENV_DIR}/bin/python3\n" + content[content.index('\n')+1:]
-        
-        with open(assistant_path, 'w') as f:
-            f.write(new_content)
-    except Exception as e:
-        print(f"Error updating shebang: {e}")
-        return 1
+    subprocess.run(["sudo", "chown", os.environ["USER"], TARGET_BIN])
     
     print("CLI-Chan installed successfully!")
     return 0
