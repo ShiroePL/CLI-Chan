@@ -48,6 +48,13 @@ fix_permissions() {
         sudo find "$dir/bin" -type f -exec chmod 755 {} \;
     else
         sudo chmod -R 755 "$dir"
+        # Make sure update scripts are executable
+        if [ -f "$dir/update-cli-chan.sh" ]; then
+            sudo chmod +x "$dir/update-cli-chan.sh"
+        fi
+        if [ -f "$dir/update-assistant.sh" ]; then
+            sudo chmod +x "$dir/update-assistant.sh"
+        fi
     fi
 }
 
@@ -79,5 +86,8 @@ fix_permissions "$INSTALL_DIR"
 if [ -d "$VENV_DIR" ]; then
     fix_permissions "$VENV_DIR"
 fi
+
+# Make sure update script stays executable for future updates
+chmod +x "$SCRIPT_DIR/update-cli-chan.sh"
 
 print_success "CLI-Chan Assistant successfully updated!"
