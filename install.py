@@ -147,16 +147,13 @@ fi
     
     with open(functions_path, 'w') as f:
         f.write('''#!/bin/bash
-
-# CLI-Chan shell functions
-alias go='function _go() { 
-    output=$(assistant :go "$@")
-    if [[ $output == CHANGE_DIR:* ]]; then
-        cd "${output#CHANGE_DIR:}" || return 1
-    else
-        echo "$output" >&2
+# Simple directory change function
+go() {
+    local dir=$(assistant :go "$@")
+    if [ $? -eq 0 ] && [ -n "$dir" ]; then
+        cd "$dir"
     fi
-}; _go'
+}
 ''')
     
     # Make the functions file executable
