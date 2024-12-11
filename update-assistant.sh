@@ -38,7 +38,7 @@ print_error() {
 # Function to fix permissions
 fix_permissions() {
     local dir=$1
-    echo "Fixing permissions for $dir..."
+    console_print "[dim]🔒 Setting permissions for $(basename "$dir")...[/dim]"
     sudo chown -R $USER:$USER "$dir"
     if [[ "$dir" == *"/venv"* ]]; then
         # Special permissions for venv directory
@@ -56,6 +56,11 @@ fix_permissions() {
             sudo chmod +x "$dir/update-assistant.sh"
         fi
     fi
+}
+
+# Add new function for styled printing
+console_print() {
+    echo -e "${DIM}$(date): $1${NC}"
 }
 
 # Redirect output to both console and log file
@@ -81,7 +86,8 @@ fix_permissions "$INSTALL_DIR"
 print_step "Running installation..."
 python3 "$INSTALL_SCRIPT" || { print_error "Install script failed"; exit 1; }
 
-# Final permission check
+# Final permission check (moved before installation success message)
+print_step "Finalizing permissions..."
 fix_permissions "$INSTALL_DIR"
 if [ -d "$VENV_DIR" ]; then
     fix_permissions "$VENV_DIR"
@@ -89,5 +95,6 @@ fi
 
 # Make sure update script stays executable for future updates
 chmod +x "$SCRIPT_DIR/update-cli-chan.sh"
+console_print "[dim]✓ Update scripts are executable[/dim]"
 
 print_success "CLI-Chan Assistant successfully updated!"
