@@ -41,14 +41,29 @@ def setup_cli_chan():
         print("Creating virtual environment...")
         subprocess.run(["sudo", "python3", "-m", "venv", VENV_DIR])
     
-    # Install requirements with sudo
-    print("Installing dependencies...")
+    # Install requirements only if requirements.txt changed or venv doesn't exist
+    print("Checking dependencies...")
     requirements_path = Path(INSTALL_DIR) / "requirements.txt"
-    if requirements_path.exists():
-        subprocess.run(["sudo", f"{VENV_DIR}/bin/pip", "install", "-r", str(requirements_path)])
+    
+    def has_requirements_changed():
+        # Check if requirements.txt was modified in the last git pull
+        result = subprocess.run(
+            ["git", "diff", "--name-only", "HEAD@{1}", "HEAD"],
+            capture_output=True,
+            text=True
+        )
+        changed_files = result.stdout.splitlines()
+        return "requirements.txt" in changed_files
+    
+    if not os.path.exists(VENV_DIR) or has_requirements_changed():
+        print("Requirements changed or venv missing, installing dependencies...")
+        if requirements_path.exists():
+            subprocess.run(["sudo", f"{VENV_DIR}/bin/pip", "install", "-r", str(requirements_path)])
+        else:
+            print(f"Warning: requirements.txt not found at {requirements_path}")
+            return 1
     else:
-        print(f"Warning: requirements.txt not found at {requirements_path}")
-        return 1
+        print("Requirements unchanged, skipping dependency installation")
     
     # Create symlink to assistant.py
     print("Creating symlink...")
