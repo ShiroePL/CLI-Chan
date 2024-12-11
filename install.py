@@ -24,9 +24,9 @@ def setup_cli_chan():
         print("Creating virtual environment...")
         subprocess.run(["sudo", "python3", "-m", "venv", VENV_DIR])
     
-    # Install requirements
+    # Install requirements with sudo
     print("Installing dependencies...")
-    subprocess.run([f"{VENV_DIR}/bin/pip", "install", "-r", f"{INSTALL_DIR}/requirements.txt"])
+    subprocess.run(["sudo", f"{VENV_DIR}/bin/pip", "install", "-r", f"{INSTALL_DIR}/requirements.txt"])
     
     # Create symlink to assistant.py
     print("Creating symlink...")
