@@ -4,6 +4,9 @@
 REPO_ROOT="$(git rev-parse --show-toplevel)"
 UPDATE_SCRIPT="$REPO_ROOT/update-assistant.sh"
 
+# Fix script permissions first
+sudo chmod +x "$UPDATE_SCRIPT"
+
 # Check if update script exists and is executable
 if [ -x "$UPDATE_SCRIPT" ]; then
     echo "Running post-merge update script..."
