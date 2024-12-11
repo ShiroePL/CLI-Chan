@@ -89,19 +89,96 @@ def setup_cli_chan():
     else:
         console.print("[dim]✓ Dependencies up to date[/dim]")
     
-    # Create symlink and set permissions
-    console.print("[yellow]🔗 Creating symlink...[/yellow]")
+    # Copy and set up the wrapper script
+    console.print("[yellow]🔧 Setting up command wrapper...[/yellow]")
+    wrapper_path = Path(INSTALL_DIR) / "assistant-wrapper.sh"
     assistant_path = Path(INSTALL_DIR) / "assistant.py"
-    if assistant_path.exists():
-        subprocess.run(["sudo", "ln", "-sf", str(assistant_path), TARGET_BIN])
-        subprocess.run(["sudo", "chmod", "+x", TARGET_BIN])
-        subprocess.run(["sudo", "chown", os.environ["USER"], TARGET_BIN])
-    else:
-        console.print("[bold red]❌ assistant.py not found![/bold red]")
-        return 1
     
+    # Create the wrapper script
+    with open(wrapper_path, 'w') as f:
+        f.write(f'''#!/bin/bash
+
+# Function to handle cleanup on exit
+cleanup() {{
+    stty sane
+    exit
+}}
+
+trap cleanup EXIT INT TERM
+
+# Get the output from the Python script with a timeout
+output=$(timeout 5s {INSTALL_DIR}/assistant.py "$@")
+exit_code=$?
+
+# Check if the command timed out
+if [ $exit_code -eq 124 ]; then
+    echo "Command timed out"
+    exit 1
+fi
+
+# Check if the output contains a directory change command
+if [[ $output == CHANGE_DIR:* ]]; then
+    # Extract the directory path and change to it
+    new_dir="${{output#CHANGE_DIR:}}"
+    if [ -d "$new_dir" ]; then
+        cd "$new_dir" || echo "Failed to change directory"
+    else
+        echo "Directory does not exist: $new_dir"
+    fi
+else
+    # If it's not a directory change, just echo the output
+    echo "$output"
+fi
+''')
+    
+    # Make both the wrapper and Python script executable
+    subprocess.run(["sudo", "chmod", "+x", str(wrapper_path)])
+    subprocess.run(["sudo", "chmod", "+x", str(assistant_path)])
+    
+    # Create symlink to the wrapper
+    console.print("[yellow]🔗 Creating symlink...[/yellow]")
+    subprocess.run(["sudo", "ln", "-sf", str(wrapper_path), TARGET_BIN])
+    subprocess.run(["sudo", "chmod", "+x", TARGET_BIN])
+    subprocess.run(["sudo", "chown", os.environ["USER"], TARGET_BIN])
+    
+    # Create shell function file
+    console.print("[yellow]📝 Creating shell functions...[/yellow]")
+    functions_path = Path(INSTALL_DIR) / "cli-chan.sh"
+    
+    with open(functions_path, 'w') as f:
+        f.write('''#!/bin/bash
+
+# CLI-Chan navigation function
+goto() {
+    if [ $# -eq 0 ]; then
+        echo "Usage: goto <directory>" >&2
+        return 1
+    fi
+    
+    # Get path from assistant (will later use AI)
+    local target=$(assistant :go "$@")
+    local exit_code=$?
+    
+    if [ $exit_code -eq 0 ] && [ -n "$target" ]; then
+        if [ -d "$target" ]; then
+            cd "$target"
+        else
+            echo "Error: Not a valid directory: $target" >&2
+            return 1
+        fi
+    else
+        return 1
+    fi
+}
+''')
+    
+    # Make the functions file executable
+    subprocess.run(["sudo", "chmod", "+x", str(functions_path)])
+    
+    # Add source instruction to README
     console.print("\n[bold green]✨ CLI-Chan installed successfully![/bold green]")
-    console.print("[bold cyan]🎉 You can now use the 'assistant' command![/bold cyan]\n")
+    console.print("[bold cyan]🎉 To enable directory navigation, add this to your ~/.bashrc or ~/.zshrc:[/bold cyan]")
+    console.print(f"[yellow]source {functions_path}[/yellow]\n")
     return 0
 
 if __name__ == "__main__":

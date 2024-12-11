@@ -1,50 +1,55 @@
 #!/usr/bin/env python3
 import os
 import sys
-import site
-
-# Add the virtual environment site-packages to Python path
-VENV_PATH = "/usr/local/lib/cli-chan/venv"
-site.addsitedir(os.path.join(VENV_PATH, "lib", "python3.8", "site-packages"))
-
+import subprocess
 from rich.console import Console
 
 console = Console()
 
-# Add version and path information
-__version__ = "0.1.0"
-
 def execute_command(command, args):
-    if command == ":go":
-        if len(args) == 0:
-            console.print("[bold red]Error: Missing folder name[/bold red]")
-            return
-        folder_path = args[0]
-        if os.path.isdir(folder_path):
-            os.chdir(folder_path)
-            console.print(f"[bold green]Changed directory to: {os.getcwd()}[/bold green]")
+    try:
+        if command == ":go":
+            if len(args) == 0:
+                print("Error: Missing folder path", file=sys.stderr)
+                return 1
+
+            # This is where you'll later add AI path finding
+            # For now, let's implement a simple path finder
+            search_path = args[0]
+            
+            # First try the exact path from current directory
+            if os.path.isdir(search_path):
+                print(os.path.abspath(search_path))
+                return 0
+                
+            # Then try from home directory
+            home_path = os.path.expanduser(f"~/docker/{search_path}")
+            if os.path.isdir(home_path):
+                print(os.path.abspath(home_path))
+                return 0
+                
+            # Later you can add AI path finding here
+            # For now, just return error
+            print(f"Error: Could not find directory: {search_path}", file=sys.stderr)
+            return 1
+            
+        elif command == ":fetch":
+            subprocess.run(["git", "fetch"])
+        elif command == ":checkout":
+            if not args:
+                print("Error: Missing branch name", file=sys.stderr)
+                return 1
+            subprocess.run(["git", "checkout", args[0]])
         else:
-            console.print(f"[bold red]Error: The folder '{folder_path}' does not exist.[/bold red]")
-    elif command == ":fetch":
-        console.print("[bold cyan]Fetching updates...[/bold cyan]")
-        os.system("git fetch")
-    elif command == ":checkout":
-        if len(args) == 0:
-            console.print("[bold red]Error: Missing branch name[/bold red]")
-            return
-        branch_name = args[0]
-        os.system(f"git checkout {branch_name}")
-    elif command == ":exit":
-        console.print("[bold yellow]Goodbye![/bold yellow]")
-        sys.exit(0)
-    else:
-        console.print(f"[bold red]Unknown command: {command}[/bold red]")
+            print(f"Unknown command: {command}", file=sys.stderr)
+            return 1
+    except Exception as e:
+        print(f"Error: {str(e)}", file=sys.stderr)
+        return 1
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        console.print("[bold yellow]Usage: :command [args][/bold yellow]")
+        print("Usage: assistant :command [args]", file=sys.stderr)
         sys.exit(1)
-    command = sys.argv[1]
-    args = sys.argv[2:]
-    execute_command(command, args)
+    execute_command(sys.argv[1], sys.argv[2:])
 
