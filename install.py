@@ -149,16 +149,14 @@ fi
         f.write('''#!/bin/bash
 
 # CLI-Chan shell functions
-function go() {
-    # Get the output from assistant command
+alias go='function _go() { 
     output=$(assistant :go "$@")
     if [[ $output == CHANGE_DIR:* ]]; then
-        target_dir="${output#CHANGE_DIR:}"
-        cd "$target_dir" && pwd || echo "Failed to change directory" >&2
+        cd "${output#CHANGE_DIR:}" || return 1
     else
         echo "$output" >&2
     fi
-}
+}; _go'
 ''')
     
     # Make the functions file executable
