@@ -89,16 +89,36 @@ def setup_cli_chan():
     else:
         console.print("[dim]✓ Dependencies up to date[/dim]")
     
-    # Create symlink and set permissions
+    # Copy and set up the wrapper script
+    console.print("[yellow]🔧 Setting up command wrapper...[/yellow]")
+    wrapper_path = Path(INSTALL_DIR) / "assistant-wrapper.sh"
+    
+    # Create the wrapper script
+    with open(wrapper_path, 'w') as f:
+        f.write('''#!/bin/bash
+
+# Get the output from the Python script
+output=$(assistant "$@")
+
+# Check if the output contains a directory change command
+if [[ $output == CHANGE_DIR:* ]]; then
+    # Extract the directory path and change to it
+    new_dir="${output#CHANGE_DIR:}"
+    cd "$new_dir"
+else
+    # If it's not a directory change, just echo the output
+    echo "$output"
+fi
+''')
+    
+    # Make the wrapper executable
+    subprocess.run(["sudo", "chmod", "+x", str(wrapper_path)])
+    
+    # Create symlink to the wrapper instead of the Python script
     console.print("[yellow]🔗 Creating symlink...[/yellow]")
-    assistant_path = Path(INSTALL_DIR) / "assistant.py"
-    if assistant_path.exists():
-        subprocess.run(["sudo", "ln", "-sf", str(assistant_path), TARGET_BIN])
-        subprocess.run(["sudo", "chmod", "+x", TARGET_BIN])
-        subprocess.run(["sudo", "chown", os.environ["USER"], TARGET_BIN])
-    else:
-        console.print("[bold red]❌ assistant.py not found![/bold red]")
-        return 1
+    subprocess.run(["sudo", "ln", "-sf", str(wrapper_path), TARGET_BIN])
+    subprocess.run(["sudo", "chmod", "+x", TARGET_BIN])
+    subprocess.run(["sudo", "chown", os.environ["USER"], TARGET_BIN])
     
     console.print("\n[bold green]✨ CLI-Chan installed successfully![/bold green]")
     console.print("[bold cyan]🎉 You can now use the 'assistant' command![/bold cyan]\n")
