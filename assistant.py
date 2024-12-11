@@ -2,6 +2,7 @@
 import os
 import sys
 import site
+import subprocess
 
 # Add the virtual environment site-packages to Python path
 VENV_PATH = "/usr/local/lib/cli-chan/venv"
@@ -15,30 +16,40 @@ console = Console()
 __version__ = "0.1.0"
 
 def execute_command(command, args):
-    if command == ":go":
-        if len(args) == 0:
-            console.print("[bold red]Error: Missing folder name[/bold red]")
-            return
-        folder_path = args[0]
-        if os.path.isdir(folder_path):
-            os.chdir(folder_path)
-            console.print(f"[bold green]Changed directory to: {os.getcwd()}[/bold green]")
+    try:
+        if command == ":go":
+            if len(args) == 0:
+                console.print("[bold red]Error: Missing folder path[/bold red]")
+                return
+            folder_path = os.path.expanduser(args[0])  # Handle ~ in paths
+            if os.path.isdir(folder_path):
+                # Use absolute path and add a timeout
+                abs_path = os.path.abspath(folder_path)
+                print(f"CHANGE_DIR:{abs_path}")
+                return
+            else:
+                console.print(f"[bold red]Error: The folder '{folder_path}' does not exist.[/bold red]")
+                return
+        elif command == ":fetch":
+            console.print("[bold cyan]Fetching updates...[/bold cyan]")
+            subprocess.run(["git", "fetch"], timeout=30)
+        elif command == ":checkout":
+            if len(args) == 0:
+                console.print("[bold red]Error: Missing branch name[/bold red]")
+                return
+            branch_name = args[0]
+            subprocess.run(["git", "checkout", branch_name], timeout=30)
+        elif command == ":exit":
+            console.print("[bold yellow]Goodbye![/bold yellow]")
+            sys.exit(0)
         else:
-            console.print(f"[bold red]Error: The folder '{folder_path}' does not exist.[/bold red]")
-    elif command == ":fetch":
-        console.print("[bold cyan]Fetching updates...[/bold cyan]")
-        os.system("git fetch")
-    elif command == ":checkout":
-        if len(args) == 0:
-            console.print("[bold red]Error: Missing branch name[/bold red]")
-            return
-        branch_name = args[0]
-        os.system(f"git checkout {branch_name}")
-    elif command == ":exit":
-        console.print("[bold yellow]Goodbye![/bold yellow]")
-        sys.exit(0)
-    else:
-        console.print(f"[bold red]Unknown command: {command}[/bold red]")
+            console.print(f"[bold red]Unknown command: {command}[/bold red]")
+    except KeyboardInterrupt:
+        console.print("\n[bold red]Operation cancelled by user[/bold red]")
+        sys.exit(1)
+    except Exception as e:
+        console.print(f"[bold red]Error: {str(e)}[/bold red]")
+        sys.exit(1)
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
