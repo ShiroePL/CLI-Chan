@@ -14,8 +14,16 @@ INSTALL_SCRIPT="$REPO_DIR/install.py"
 fix_permissions() {
     local dir=$1
     echo "Fixing permissions for $dir..."
-    sudo chown -R $USER "$dir"
-    sudo chmod -R 755 "$dir"
+    sudo chown -R $USER:$USER "$dir"
+    if [[ "$dir" == *"/venv"* ]]; then
+        # Special permissions for venv directory
+        sudo find "$dir" -type d -exec chmod 755 {} \;
+        sudo find "$dir" -type f -exec chmod 644 {} \;
+        # Make bin files executable
+        sudo find "$dir/bin" -type f -exec chmod 755 {} \;
+    else
+        sudo chmod -R 755 "$dir"
+    fi
 }
 
 # Redirect output to both console and log file

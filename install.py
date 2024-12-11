@@ -16,13 +16,15 @@ def setup_cli_chan():
     subprocess.run(["sudo", "chown", "-R", os.environ["USER"], INSTALL_DIR])
     subprocess.run(["sudo", "chmod", "-R", "755", INSTALL_DIR])
     
-    # Handle virtual environment first
+    # Create virtual environment if it doesn't exist
     if not os.path.exists(VENV_DIR):
         print("Creating virtual environment...")
         subprocess.run(["sudo", "python3", "-m", "venv", VENV_DIR])
-        # Set permissions for venv
-        subprocess.run(["sudo", "chown", "-R", os.environ["USER"], VENV_DIR])
-        subprocess.run(["sudo", "chmod", "-R", "755", VENV_DIR])
+        # Set proper ownership and permissions
+        subprocess.run(["sudo", "chown", "-R", f"{os.environ['USER']}:{os.environ['USER']}", VENV_DIR])
+        subprocess.run(["sudo", "find", VENV_DIR, "-type", "d", "-exec", "chmod", "755", "{}", ";"])
+        subprocess.run(["sudo", "find", VENV_DIR, "-type", "f", "-exec", "chmod", "644", "{}", ";"])
+        subprocess.run(["sudo", "find", f"{VENV_DIR}/bin", "-type", "f", "-exec", "chmod", "755", "{}", ";"])
     
     # Copy project files - modified to handle nested directories
     current_dir = Path(__file__).parent
@@ -61,10 +63,9 @@ def setup_cli_chan():
     if not os.path.exists(VENV_DIR) or has_requirements_changed():
         print("Requirements changed or venv missing, installing dependencies...")
         if requirements_path.exists():
-            # Ensure pip is up to date
+            # Use python -m pip to ensure we're using the right pip
             subprocess.run([f"{VENV_DIR}/bin/python3", "-m", "pip", "install", "--upgrade", "pip"])
-            # Install requirements without sudo
-            subprocess.run([f"{VENV_DIR}/bin/pip", "install", "-r", str(requirements_path)])
+            subprocess.run([f"{VENV_DIR}/bin/python3", "-m", "pip", "install", "-r", str(requirements_path)])
         else:
             print(f"Warning: requirements.txt not found at {requirements_path}")
             return 1
