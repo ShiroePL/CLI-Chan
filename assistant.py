@@ -1,6 +1,4 @@
-#!/usr/bin/env /usr/local/lib/cli-chan/venv/bin/python
-
-
+#!/usr/bin/env /usr/local/lib/cli-chan/venv/bin/python3
 import os
 import sys
 from rich.console import Console
