@@ -10,6 +10,31 @@ TARGET_BIN="/usr/local/bin/assistant"
 VENV_DIR="$INSTALL_DIR/venv"
 INSTALL_SCRIPT="$REPO_DIR/install.py"
 
+# Colors and formatting
+GREEN='\033[0;32m'
+CYAN='\033[0;36m'
+YELLOW='\033[1;33m'
+RED='\033[0;31m'
+NC='\033[0m' # No Color
+DIM='\033[2m'
+
+# Function to print colored messages
+print_status() {
+    echo -e "${CYAN}$(date): $1${NC}"
+}
+
+print_step() {
+    echo -e "${YELLOW}🔄 $1${NC}"
+}
+
+print_success() {
+    echo -e "${GREEN}✓ $1${NC}"
+}
+
+print_error() {
+    echo -e "${RED}❌ $1${NC}"
+}
+
 # Function to fix permissions
 fix_permissions() {
     local dir=$1
@@ -29,7 +54,7 @@ fix_permissions() {
 # Redirect output to both console and log file
 exec 1> >(tee -a "$REPO_DIR/update.log") 2>&1
 
-echo "$(date): Starting CLI-Chan Assistant update..."
+print_status "Starting CLI-Chan Assistant update..."
 
 # Step 1: Navigate to the repository
 if [ ! -d "$REPO_DIR" ]; then
@@ -40,7 +65,7 @@ fi
 cd "$REPO_DIR" || exit
 
 # Step 2: Pull the latest changes from GitHub
-echo "Pulling the latest changes from GitHub..."
+print_step "Pulling the latest changes from GitHub..."
 git pull || { echo "Error: Failed to pull from GitHub"; exit 1; }
 
 # Fix permissions after git pull
@@ -80,4 +105,4 @@ if [ ! -x "$TARGET_BIN" ]; then
     sudo chmod +x "$TARGET_BIN"
 fi
 
-echo "CLI-Chan Assistant successfully updated!"
+print_success "CLI-Chan Assistant successfully updated!"
