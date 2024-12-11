@@ -10,6 +10,14 @@ TARGET_BIN="/usr/local/bin/assistant"
 VENV_DIR="$INSTALL_DIR/venv"
 INSTALL_SCRIPT="$REPO_DIR/install.py"
 
+# Function to fix permissions
+fix_permissions() {
+    local dir=$1
+    echo "Fixing permissions for $dir..."
+    sudo chown -R $USER "$dir"
+    sudo chmod -R 755 "$dir"
+}
+
 # Redirect output to both console and log file
 exec 1> >(tee -a "$REPO_DIR/update.log") 2>&1
 
@@ -27,16 +35,24 @@ cd "$REPO_DIR" || exit
 echo "Pulling the latest changes from GitHub..."
 git pull || { echo "Error: Failed to pull from GitHub"; exit 1; }
 
+# Fix permissions after git pull
+fix_permissions "$REPO_DIR"
+
 # Step 3: Clean old installation and set permissions
 echo "Cleaning old installation..."
 sudo rm -rf "$INSTALL_DIR"
 sudo mkdir -p "$INSTALL_DIR"
-sudo chown -R $USER "$INSTALL_DIR"
-sudo chmod -R 755 "$INSTALL_DIR"
+fix_permissions "$INSTALL_DIR"
 
 # Step 4: Run the install script
 echo "Running install script to update dependencies and copy files..."
 python3 "$INSTALL_SCRIPT" || { echo "Error: Install script failed"; exit 1; }
+
+# Final permission check
+fix_permissions "$INSTALL_DIR"
+if [ -d "$VENV_DIR" ]; then
+    fix_permissions "$VENV_DIR"
+fi
 
 # Step 5: Double check virtual environment
 if [ ! -d "$VENV_DIR" ]; then
